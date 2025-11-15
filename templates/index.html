@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block script %}
+
+    <script>
+
+    $(async () => {
+
+ 
+        const form = $("#message-form");
+
+        form.on('submit', function(event) {
+            event.preventDefault();
+            saveMessage();
+        });
+
+        function saveMessage() {
+            const name = $("#name").val();
+            const message = $("#message").val();
+
+            fetch("/save_message", {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name, message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Success:", data);
+                form[0].reset();
+
+                displayNewMessage({name, message});
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+        }
+
+        function displayNewMessage(data) {
+            const messageTable = $("#messages-table");
+            html = `
+                <tr>
+                    <td>${data.name}</td>
+                    <td>${data.message}</td>
+                </tr>
+            `;
+
+            messageTable.prepend(html);
+
+        }
+
+
+    
+    });
+
+    </script>
+
+{% endblock %}
+
+
+{% block main %}
+
+<div class="container">
+
+    <div>
+        <form id="message-form">
+            <div class="mb-3">
+                <label for="name" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="name" >
+            </div>
+            <div class="mb-3">
+                <label for="message" class="form-label">Enter a Message</label>
+                <textarea class="form-control" id="message" rows="3"></textarea>
+            </div>
+        
+            <button type="submit" class="btn btn-primary" id="submit-message">Submit</button>
+        </form>
+    </div>
+
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Message</th>
+                </tr>
+            </thead>
+            <tbody id="messages-table">
+                {% for message in current_messages %}
+                    <tr>
+                        <td>{{ message.name }}</td>
+                        <td>{{ message.message }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+</div>
+
+{% endblock %}
+
+
+

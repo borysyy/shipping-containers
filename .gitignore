@@ -1,0 +1,40 @@
+##########################################################
+#                                                        #
+#             Gitignore for Shipping Containers          #
+#                                                        #
+#                                                        #
+#                                                        #
+##########################################################
+
+########################################
+#                                      #
+#          Root of file path           #
+#                                      #
+########################################
+
+# Include the root of the project file
+!/
+
+# Exclude everything inside of project
+/*
+
+!app.py
+!templates/
+
+
+########################################
+#                                      #
+#                 Misc.                #
+#                                      #
+########################################
+
+# Files for server setup
+
+# Requirements files
+!requirements.in
+!requirements.txt
+
+# Other
+**/__pycache__
+!README.md
+!.gitignore
