@@ -18,9 +18,11 @@
 # Exclude everything inside of project
 /*
 
-!app.py
-!templates/
-!migrations/
+!/flask_project
+
+!/mysql
+!/nginx
+
 
 
 ########################################
@@ -30,6 +32,9 @@
 ########################################
 
 # Files for server setup
+!Containerfile
+!gunicorn.conf.py
+!deploy_podman_stack.yml
 
 # Requirements files
 !requirements.in

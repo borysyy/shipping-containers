@@ -1,0 +1,175 @@
+---
+# deploy_podman_stack.yml
+
+- name: Deploy web stack with Podman (Nginx -> Flask -> MySQL)
+  hosts: localhost
+  gather_facts: false 
+  become: true
+  vars:
+
+    # Paths on the target host where build contexts exist (you can rsync/copy them beforehand)
+    src_base_dir: "/opt/deploy/shipping-containers"          # expected to contain nginx/, flask/, mysql/
+    # nginx_ctx: "{{ src_base_dir }}/nginx"
+    flask_ctx: "{{ src_base_dir }}"
+    # mysql_ctx: "{{ src_base_dir }}/mysql"
+
+   
+    # Podman network & volumes
+    podman_network: "webnet"
+    # mysql_volume: "shipping_containers_data"
+
+    # Ports
+    # nginx_host_port: 80
+    # nginx_container_port: 80
+    flask_container_port: 5000
+
+    # MySQL env (change password in production!)
+    mysql_root_password: "ChangeMeRootPass!"
+    mysql_database: "appdb"
+    mysql_user: "appuser"
+    mysql_password: "ChangeMeAppPass!"
+
+    # Systemd unit directory
+    # systemd_unit_dir: "/etc/systemd/system"
+    # Container extra run args (list)
+    flask_env:
+      - "DATABASE_HOST={{ mysql_ct }}"
+      - "DATABASE_USER={{ mysql_user }}"
+      - "DATABASE_PASSWORD={{ mysql_password }}"
+      - "DATABASE_NAME={{ mysql_database }}"
+
+  tasks:
+  - name: Install Podman and its dependencies
+    ansible.builtin.package:
+      name:
+        - podman
+        - podman-containers
+        - buildah
+      state: present
+
+  - name: Ensure package manager cache is up to date (dnf)
+    dnf:
+      update_cache: yes
+    when: pkg_mgr == "dnf"
+
+  - name: Ensure /opt/deploy exists
+    file:
+      path: "{{ src_base_dir }}"
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+
+  - name: Create Podman network if missing
+    command: podman network inspect {{ podman_network }}
+    register: podnet_inspect
+    ignore_errors: yes
+
+  - name: Create podman network
+    command: podman network create {{ podman_network }}
+    when: podnet_inspect.rc != 0
+
+  # - name: Create named podman volume for MySQL
+  #   command: podman volume inspect {{ mysql_volume }}
+  #   register: vol_inspect
+  #   ignore_errors: yes
+
+  # - name: Create volume if missing
+  #   command: podman volume create {{ mysql_volume }}
+  #   when: vol_inspect.rc != 0
+
+
+  - name: Build Flask image
+    containers.podman.podman_image:
+      - name: flask-app-image
+        build:
+          path: "{{ flask_ctx }}"
+          filepath: Containerfile
+          state: build
+
+      
+  - name: Run container
+    containers.podman.podman_container:
+      - name: flask-app-container
+        ports:
+          - "5000:5000"
+        state: started
+        detach: true
+        restart_policy: always
+   
+
+  # - name: Pause briefly for containers to settle
+  #   pause:
+  #     seconds: 3
+
+  # - name: Generate systemd unit for MySQL container
+  #   command: podman generate systemd --new --name {{ mysql_ct }} --files --restart-policy=on-failure
+  #   args:
+  #     chdir: /tmp
+  #   register: mysql_gen
+  #   changed_when: "'Created' in mysql_gen.stdout or mysql_gen.rc == 0"
+
+  # - name: Move mysql systemd unit into system folder
+  #   shell: |
+  #     mv /tmp/container-{{ mysql_ct }}.service {{ systemd_unit_dir }}/container-{{ mysql_ct }}.service
+  #   args:
+  #     warn: false
+  #   when: "'/tmp/container-{{ mysql_ct }}.service' in lookup('fileglob','/tmp/*', errors='ignore') or (mysql_gen is defined and mysql_gen.stdout is search('container-'))"
+  #   ignore_errors: yes
+
+  # - name: Generate systemd unit for Flask container
+  #   command: podman generate systemd --new --name {{ flask_ct }} --files --restart-policy=on-failure
+  #   args:
+  #     chdir: /tmp
+  #   register: flask_gen
+  #   changed_when: "'Created' in flask_gen.stdout or flask_gen.rc == 0"
+
+  # - name: Move flask systemd unit into system folder
+  #   shell: |
+  #     mv /tmp/container-{{ flask_ct }}.service {{ systemd_unit_dir }}/container-{{ flask_ct }}.service
+  #   args:
+  #     warn: false
+  #   ignore_errors: yes
+
+  # - name: Generate systemd unit for Nginx container
+  #   command: podman generate systemd --new --name {{ nginx_ct }} --files --restart-policy=on-failure
+  #   args:
+  #     chdir: /tmp
+  #   register: nginx_gen
+  #   changed_when: "'Created' in nginx_gen.stdout or nginx_gen.rc == 0"
+
+  # - name: Move nginx systemd unit into system folder
+  #   shell: |
+  #     mv /tmp/container-{{ nginx_ct }}.service {{ systemd_unit_dir }}/container-{{ nginx_ct }}.service
+  #   args:
+  #     warn: false
+  #   ignore_errors: yes
+
+  # - name: Reload systemd daemon
+  #   command: systemctl daemon-reload
+  #   ignore_errors: false
+
+  # - name: Enable and start mysql container service
+  #   systemd:
+  #     name: "container-{{ mysql_ct }}.service"
+  #     enabled: true
+  #     state: started
+  #   ignore_errors: false
+
+  # - name: Enable and start flask container service
+  #   systemd:
+  #     name: "container-{{ flask_ct }}.service"
+  #     enabled: true
+  #     state: started
+
+  # - name: Enable and start nginx container service
+  #   systemd:
+  #     name: "container-{{ nginx_ct }}.service"
+  #     enabled: true
+  #     state: started
+
+  - name: Show running podman containers
+    command: podman ps --format json
+    register: podman_ps
+  - debug:
+      var: podman_ps.stdout
