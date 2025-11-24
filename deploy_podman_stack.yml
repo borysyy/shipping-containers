@@ -69,7 +69,7 @@
         name: flask-app-image
         build:
           path: "{{ flask_ctx }}"
-          filepath: Containerfile
+          container_file: Containerfile
           state: build
 
       
