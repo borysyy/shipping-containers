@@ -82,6 +82,9 @@
         name: flask-app-image
         state: build
         path: "{{ flask_ctx }}"
+        force: true
+        build:
+          cache: false
     
 
   - name: Run Flask container
