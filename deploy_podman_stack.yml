@@ -11,32 +11,15 @@
     src_base_dir: "/home/webmaster/shipping-containers"          # expected to contain nginx/, flask/, mysql/
     # nginx_ctx: "{{ src_base_dir }}/nginx"
     flask_ctx: "{{ src_base_dir }}"
-    # mysql_ctx: "{{ src_base_dir }}/mysql"
+    mysql_ctx: "{{ src_base_dir }}/mysql"
 
-   
     # Podman network & volumes
     podman_network: "webnet"
-    # mysql_volume: "shipping_containers_data"
-
-    # Ports
-    # nginx_host_port: 80
-    # nginx_container_port: 80
-    flask_container_port: 5000
-
-    # MySQL env (change password in production!)
-    mysql_root_password: "ChangeMeRootPass!"
-    mysql_database: "appdb"
-    mysql_user: "appuser"
-    mysql_password: "ChangeMeAppPass!"
+    mysql_volume: "shipping_containers_data"
 
     # Systemd unit directory
     # systemd_unit_dir: "/etc/systemd/system"
     # Container extra run args (list)
-    flask_env:
-      - "DATABASE_HOST={{ mysql_ct }}"
-      - "DATABASE_USER={{ mysql_user }}"
-      - "DATABASE_PASSWORD={{ mysql_password }}"
-      - "DATABASE_NAME={{ mysql_database }}"
 
   tasks:
   - name: Install Podman and its dependencies
@@ -46,7 +29,7 @@
         - buildah
       state: present
 
-  - name: Ensure /opt/deploy exists
+  - name: Ensure app directory exists
     file:
       path: "{{ src_base_dir }}"
       state: directory
@@ -64,6 +47,39 @@
   #   when: vol_inspect.rc != 0
 
 
+  - name: Build mySQL image
+    containers.podman.podman_image:
+        name: mysql-image
+        state: build
+        path: "{{ mysql_ctx }}"
+    
+
+  - name: Run mySQL container
+    containers.podman.podman_container:
+        image: mysql-image
+        name: mysql-container
+        ports:
+          - "3306:3306"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+          MYSQL_DATABASE: "{{ mysql_database }}"
+          MYSQL_USER: "{{ mysql_user }}"
+          MYSQL_PASSWORD: "{{ mysql_password }}"
+        volumes:
+          - "{{ mysql_volume }}:/var/lib/mysql"
+        state: started
+        detach: true
+        restart_policy: always
+
+
+  - name: Wait for MySQL port to be available
+    wait_for:
+      host: "127.0.0.1"
+      port: 3306
+      delay: 5
+      timeout: 60
+
+
   - name: Build Flask image
     containers.podman.podman_image:
         name: flask-app-image
@@ -71,7 +87,7 @@
         path: "{{ flask_ctx }}"
     
 
-  - name: Run container
+  - name: Run Flask container
     containers.podman.podman_container:
         image: flask-app-image
         name: flask-app-container
