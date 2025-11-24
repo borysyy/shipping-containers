@@ -41,6 +41,8 @@ markupsafe==3.0.3
     #   werkzeug
 packaging==25.0
     # via gunicorn
+pymysql==1.1.2
+    # via -r requirements.in
 python-dotenv==1.2.1
     # via -r requirements.in
 sqlalchemy==2.0.44
