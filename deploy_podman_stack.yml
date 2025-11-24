@@ -46,11 +46,6 @@
         - buildah
       state: present
 
-  - name: Ensure package manager cache is up to date (dnf)
-    dnf:
-      update_cache: yes
-    when: pkg_mgr == "dnf"
-
   - name: Ensure /opt/deploy exists
     file:
       path: "{{ src_base_dir }}"
