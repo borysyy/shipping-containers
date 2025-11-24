@@ -43,7 +43,6 @@
     ansible.builtin.package:
       name:
         - podman
-        - podman-containers
         - buildah
       state: present
 
