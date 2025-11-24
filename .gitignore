@@ -34,7 +34,7 @@
 # Files for server setup
 !Containerfile
 !gunicorn.conf.py
-!deploy_podman_stack.yml
+!deploy.yml
 
 # Requirements files
 !requirements.in
