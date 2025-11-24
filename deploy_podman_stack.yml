@@ -3,12 +3,12 @@
 
 - name: Deploy web stack with Podman (Nginx -> Flask -> MySQL)
   hosts: localhost
-  gather_facts: false 
+  gather_facts: true
   become: true
   vars:
 
     # Paths on the target host where build contexts exist (you can rsync/copy them beforehand)
-    src_base_dir: "/opt/deploy/shipping-containers"          # expected to contain nginx/, flask/, mysql/
+    src_base_dir: "/home/webmaster/shipping-containers"          # expected to contain nginx/, flask/, mysql/
     # nginx_ctx: "{{ src_base_dir }}/nginx"
     flask_ctx: "{{ src_base_dir }}"
     # mysql_ctx: "{{ src_base_dir }}/mysql"
@@ -71,7 +71,6 @@
         path: "{{ flask_ctx }}"
     
 
-      
   - name: Run container
     containers.podman.podman_container:
         image: flask-app-image
