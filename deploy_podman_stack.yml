@@ -67,9 +67,9 @@
   - name: Build Flask image
     containers.podman.podman_image:
         name: flask-app-image
-        build:
-          file: "{{ flask_ctx }}/Containerfile"
-          state: build
+        state: build
+        path: "{{ flask_ctx }}"
+    
 
       
   - name: Run container
