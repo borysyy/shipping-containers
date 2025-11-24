@@ -59,15 +59,6 @@
       group: root
       mode: "0755"
 
-  - name: Create Podman network if missing
-    command: podman network inspect {{ podman_network }}
-    register: podnet_inspect
-    ignore_errors: yes
-
-  - name: Create podman network
-    command: podman network create {{ podman_network }}
-    when: podnet_inspect.rc != 0
-
   # - name: Create named podman volume for MySQL
   #   command: podman volume inspect {{ mysql_volume }}
   #   register: vol_inspect
