@@ -14,7 +14,7 @@
     mysql_ctx: "{{ src_base_dir }}/mysql"
 
     # Podman network & volumes
-    podman_network: "webnet"
+    podman_network: "shipping_containers_network"
     mysql_volume: "shipping_containers_data"
 
     # Systemd unit directory
@@ -37,15 +37,10 @@
       group: webmaster
       mode: "0755"
 
-  # - name: Create named podman volume for MySQL
-  #   command: podman volume inspect {{ mysql_volume }}
-  #   register: vol_inspect
-  #   ignore_errors: yes
-
-  # - name: Create volume if missing
-  #   command: podman volume create {{ mysql_volume }}
-  #   when: vol_inspect.rc != 0
-
+  - name: Create podman network
+    containers.podman.podman_network:
+        name: "{{ podman_network }}"
+        state: present
 
   - name: Build mySQL image
     containers.podman.podman_image:
@@ -68,6 +63,8 @@
         volumes:
           - "{{ mysql_volume }}:/var/lib/mysql"
         state: started
+        network:
+          - "{{ podman_network }}"
         detach: true
         restart_policy: always
 
@@ -93,6 +90,14 @@
         name: flask-app-container
         ports:
           - "5000:5000"
+        env:
+          MYSQL_DATABASE: "{{ mysql_database }}"
+          MYSQL_USER: "{{ mysql_user }}"
+          MYSQL_PASSWORD: "{{ mysql_password }}"
+          DB_HOST: "mysql-container"
+          DB_PORT: "3306"
+        network:
+          - "{{ podman_network }}"
         state: started
         detach: true
         restart_policy: always
