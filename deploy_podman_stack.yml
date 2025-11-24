@@ -74,6 +74,7 @@
       
   - name: Run container
     containers.podman.podman_container:
+        image: flask-app-image
         name: flask-app-container
         ports:
           - "5000:5000"
