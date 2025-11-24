@@ -81,7 +81,7 @@
 
   - name: Build Flask image
     containers.podman.podman_image:
-      - name: flask-app-image
+        name: flask-app-image
         build:
           path: "{{ flask_ctx }}"
           filepath: Containerfile
@@ -90,7 +90,7 @@
       
   - name: Run container
     containers.podman.podman_container:
-      - name: flask-app-container
+        name: flask-app-container
         ports:
           - "5000:5000"
         state: started
