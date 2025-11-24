@@ -10,8 +10,8 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY ./flask_project .
 
-COPY ./gunicorn.conf.py .
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
+CMD ["./entrypoint.sh"]
