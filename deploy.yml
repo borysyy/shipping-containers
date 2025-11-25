@@ -75,15 +75,16 @@
       delay: 5
       timeout: 60
 
-  - name: Create webserver pod
+  - name: Create and start webserver pod
     containers.podman.podman_pod:
         name: webserver-pod
-        state: created
+        state: start
         hostname: webserver-pod
         ports:
           - "80:80"
           - "5000:5000"
-        network: "{{ podman_network }}"
+        network: 
+          - "{{ podman_network }}"
 
   - name: Build Flask image
     containers.podman.podman_image:
@@ -128,12 +129,7 @@
         restart_policy: always
         pod: webserver-pod
 
-  - name: Start pod
-    containers.podman.podman_pod:
-        name: webserver-pod
-        state: started  
-
-
+ 
   # - name: Pause briefly for containers to settle
   #   pause:
   #     seconds: 3
