@@ -43,14 +43,14 @@
 
   - name: Build mySQL image
     containers.podman.podman_image:
-        name: mysql-image
+        name: mysql-image:1.0
         state: build
         path: "{{ mysql_ctx }}"
     
 
   - name: Run mySQL container
     containers.podman.podman_container:
-        image: mysql-image
+        image: mysql-image:1.0
         name: mysql-container
         ports:
           - "3306:3306"
@@ -83,7 +83,7 @@
 
   - name: Build Flask image
     containers.podman.podman_image:
-        name: flask-app-image
+        name: flask-app-image:1.0
         state: build
         path: "{{ flask_ctx }}"
         force: true
@@ -93,7 +93,7 @@
 
   - name: Run Flask container
     containers.podman.podman_container:
-        image: flask-app-image
+        image: flask-app-image:1.0
         name: flask-app-container
         ports:
           - "5000:5000"
@@ -112,7 +112,7 @@
 
   - name: Build Nginx image
     containers.podman.podman_image:
-        name: nginx-app-image
+        name: nginx-app-image:1.0
         state: build
         path: "{{ nginx_ctx }}"
         force: true
@@ -121,7 +121,7 @@
    
   - name: Run Nginx container
     containers.podman.podman_container:
-        image: nginx-app-image
+        image: nginx-app-image:1.0
         name: nginx-app-container
         ports:
           - "80:80"
