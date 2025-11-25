@@ -103,8 +103,6 @@
           MYSQL_PASSWORD: "{{ mysql_password }}"
           DB_HOST: "mysql-container"
           DB_PORT: "3306"
-        network:
-          - "{{ podman_network }}"
         state: started
         detach: true
         restart_policy: always
@@ -125,8 +123,6 @@
         name: nginx-app-container
         ports:
           - "80:80"
-        network:
-          - "{{ podman_network }}"
         state: started
         detach: true
         restart_policy: always
