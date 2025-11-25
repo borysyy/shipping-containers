@@ -78,7 +78,7 @@
   - name: Create webserver pod
     containers.podman.podman_pod:
         name: webserver-pod
-        state: present
+        state: started
         published_ports:
           - "80:80"
           - "5000:5000"
