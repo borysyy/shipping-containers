@@ -78,7 +78,7 @@
   - name: Create webserver pod
     containers.podman.podman_pod:
         name: webserver-pod
-        state: created
+        state: present
         hostname: webserver-pod
 
   - name: Build Flask image
