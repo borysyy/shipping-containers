@@ -78,7 +78,7 @@
   - name: Create and start webserver pod
     containers.podman.podman_pod:
         name: webserver-pod
-        state: start
+        state: started
         hostname: webserver-pod
         ports:
           - "80:80"
