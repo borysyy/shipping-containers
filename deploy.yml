@@ -80,6 +80,10 @@
         name: webserver-pod
         state: created
         hostname: webserver-pod
+        ports:
+          - "80:80"
+          - "5000:5000"
+        network: "{{ podman_network }}"
 
   - name: Build Flask image
     containers.podman.podman_image:
@@ -95,8 +99,6 @@
     containers.podman.podman_container:
         image: flask-app-image:1.0
         name: flask-app-container
-        ports:
-          - "5000:5000"
         env:
           MYSQL_DATABASE: "{{ mysql_database }}"
           MYSQL_USER: "{{ mysql_user }}"
@@ -121,8 +123,6 @@
     containers.podman.podman_container:
         image: nginx-app-image:1.0
         name: nginx-app-container
-        ports:
-          - "80:80"
         state: started
         detach: true
         restart_policy: always
