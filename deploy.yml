@@ -129,6 +129,13 @@
         restart_policy: always
         pod: webserver-pod
 
+  - name: Remove dangling Podman images
+    containers.podman.podman_image:
+        state: absent
+        filter:
+          dangling: true
+
+
  
   # - name: Pause briefly for containers to settle
   #   pause:
