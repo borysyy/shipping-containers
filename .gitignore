@@ -35,6 +35,7 @@
 !Containerfile
 !gunicorn.conf.py
 !deploy.yml
+!run.sh
 
 # Requirements files
 !requirements.in
