@@ -78,6 +78,7 @@
         name: mysql-image:1.0
         state: build
         path: "{{ remote_mysql_app_dir }}"
+    become: false
     
   - name: Create mySQL container
     containers.podman.podman_container:
