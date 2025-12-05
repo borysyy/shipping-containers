@@ -108,7 +108,7 @@
    
   - name: Enable mysql container
     ansible.builtin.systemd_service:
-      name: mysql=shipping_containers.service
+      name: mysql-shipping_containers.service
       state: started
       enabled: true
       scope: user
