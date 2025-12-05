@@ -5,7 +5,7 @@
   hosts: webserver
   gather_facts: true
   become: true
-  
+
   vars_files:
     - "db-vault"
   vars:
@@ -56,7 +56,7 @@
     loop:
       - { src: "{{ flask_ctx }}/Containerfile", dest: "{{ remote_flask_app_dir }}/Containerfile" }
       - { src: "{{ flask_ctx }}/requirements.txt", dest: "{{ remote_flask_app_dir }}/requirements.txt" }
-      - { src: "{{ flask_ctx }}/flask_project/gunicorn.conf.py", dest: "{{ remote_flask_app_dir }}/gunicorn.conf.py" }
+      - { src: "{{ flask_ctx }}/flask_project/", dest: "{{ remote_flask_app_dir }}/flask_project/" }
       - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
       - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
 
