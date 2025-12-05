@@ -5,10 +5,11 @@
   hosts: webserver
   gather_facts: true
   become: true
+  
+  vars_files:
+    - "db-vault"
   vars:
 
-    vars_files:
-      - "db-vault"
 
     src_base_dir: "/home/borysyy/shipping-containers"
     flask_ctx: "{{ src_base_dir }}"
