@@ -98,24 +98,6 @@
           - "{{ podman_network }}"
         state: quadlet
     become: false
-
-  - name: Reload user systemd
-    ansible.builtin.systemd_service:
-      daemon_reload: true
-      scope: user
-    become: false
-    environment:
-      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
-   
-  - name: Enable mysql container
-    ansible.builtin.systemd_service:
-      name: mysql-shipping_containers.service
-      state: started
-      enabled: true
-      scope: user
-    become: false
-    environment:
-      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
   
   - name: Wait for MySQL port to be available
     wait_for:
@@ -127,13 +109,14 @@
   - name: Create and start webserver pod
     containers.podman.podman_pod:
         name: webserver-pod
-        state: started
+        state: quadlet
         hostname: webserver-pod
         ports:
           - "80:80"
           - "5000:5000"
         network: 
           - "{{ podman_network }}"
+    become: false
 
   - name: Build Flask image
     containers.podman.podman_image:
@@ -143,8 +126,9 @@
         force: true
         build:
           cache: false
+    become: false
   
-  - name: Run Flask container
+  - name: Create Flask container
     containers.podman.podman_container:
         image: flask-app-image:1.0
         name: flask-app-shipping_containers
@@ -154,10 +138,11 @@
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
           DB_HOST: "mysql-container"
           DB_PORT: "3306"
-        state: started
+        state: created
         detach: true
         restart_policy: always
         pod: webserver-pod
+    become: false
 
   - name: Build Nginx image
     containers.podman.podman_image:
@@ -167,19 +152,52 @@
         force: true
         build:
           cache: false
+    become: false
    
-  - name: Run Nginx container
+  - name: Create Nginx container
     containers.podman.podman_container:
         image: nginx-app-image:1.0
         name: nginx-app-shipping_containers
-        state: started
+        state: created
         detach: true
         restart_policy: always
         pod: webserver-pod
+    become: false
+
+  - name: Reload user systemd
+    ansible.builtin.systemd_service:
+      daemon_reload: true
+      scope: user
+    become: false
+    environment:
+      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
+
+  - name: Enable mysql container
+    ansible.builtin.systemd_service:
+      name: mysql-shipping_containers.service
+      state: started
+      enabled: true
+      scope: user
+    become: false
+    environment:
+      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
+
+  - name: Start webserver pod
+    ansible.builtin.systemd_service:
+      name: webserver-pod.service
+      state: started
+      enabled: true
+      scope: user
+    become: false
+    environment:
+      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
+
+
 
   - name: Prune dangling images
     containers.podman.podman_prune:
       image: true
+    become: false
    
   - name: Show running podman containers
     command: podman ps --format json
