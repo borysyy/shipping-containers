@@ -60,6 +60,14 @@
       - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
       - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
 
+  - name: Ensure user systemd dir exists
+    file:
+      path: /home/webmaster/.config/systemd/user
+      state: directory
+      mode: "0755"
+    become: true
+    become_user: webmaster
+
 
 
   - name: Create podman network
@@ -77,7 +85,7 @@
   - name: Create mySQL container
     containers.podman.podman_container:
         image: mysql-image:1.0
-        name: mysql-container
+        name: mysql-shipping-containers
         ports:
           - "3306:3306"
         env:
@@ -95,18 +103,17 @@
     
   - name: Generate systemd unit file for MySQL container
     containers.podman.podman_generate_systemd:
-      name: mysql-container
+      name: mysql-shipping-containers
       new: true
       no_header: true
       dest: /home/webmaster/.config/systemd/user/
 
   - name: Ensure mySQL container is started and enabled
     ansible.builtin.systemd:
-      name: mysql-shipping-containers
+      name: container-mysql-shipping-containers
       daemon_reload: true
       enabled: true
       state: started
-
 
   - name: Wait for MySQL port to be available
     wait_for:
@@ -134,13 +141,11 @@
         force: true
         build:
           cache: false
-
   
-    
   - name: Run Flask container
     containers.podman.podman_container:
         image: flask-app-image:1.0
-        name: flask-app-container
+        name: flask-app-shipping-containers
         env:
           MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
           MYSQL_USER: "{{ MYSQL_USER }}"
@@ -164,18 +169,22 @@
   - name: Run Nginx container
     containers.podman.podman_container:
         image: nginx-app-image:1.0
-        name: nginx-app-container
+        name: nginx-app-shipping-containers
         state: started
         detach: true
         restart_policy: always
         pod: webserver-pod
 
+  - name: Reload user systemd
+    command: systemctl --user daemon-reload
+    become: true
+    become_user: webmaster
+
+
   - name: Prune dangling images
     containers.podman.podman_prune:
       image: true
    
-
-
 
  
   # - name: Pause briefly for containers to settle
