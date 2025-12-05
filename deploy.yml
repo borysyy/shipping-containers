@@ -27,15 +27,12 @@
     podman_network: "shipping_containers_network"
     mysql_volume: "shipping_containers_data"
 
-    # Systemd unit directory
-    # systemd_unit_dir: "/etc/systemd/system"
-    # Container extra run args (list)
-
   tasks:
   - name: Install Podman and its dependencies
     ansible.builtin.package:
       name:
         - podman
+        - podman-quadlet
         - buildah
       state: present
 
