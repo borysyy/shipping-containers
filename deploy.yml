@@ -97,7 +97,7 @@
     containers.podman.podman_generate_systemd:
       name: mysql-container
       new: true
-      no_headers: true
+      no_header: true
       dest: /home/webmaster/.config/systemd/user/
 
   - name: Ensure mySQL container is started and enabled
