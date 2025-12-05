@@ -7,10 +7,18 @@
   become: true
   vars:
 
-    src_base_dir: "/home/webmaster/shipping-containers"          
+    vars_files:
+      - "db-vault"
+
+    src_base_dir: "/home/borysyy/shipping-containers"
     flask_ctx: "{{ src_base_dir }}"
     mysql_ctx: "{{ src_base_dir }}/mysql"
     nginx_ctx: "{{ src_base_dir }}/nginx"
+
+    remote_flask_app_dir: "/home/webmaster/shipping-containers/"
+    remote_mysql_app_dir: "/home/webmaster/shipping-containers/mysql"
+    remote_nginx_app_dir: "/home/webmaster/shipping-containers/nginx"
+
 
     # Podman network & volumes
     podman_network: "shipping_containers_network"
@@ -28,13 +36,28 @@
         - buildah
       state: present
 
-  - name: Ensure app directory exists
+  - name: Ensure all build contexts exist
     file:
-      path: "{{ src_base_dir }}"
+      path: "{{ item }}"
       state: directory
+    loop:
+      - "{{ remote_flask_app_dir }}"
+      - "{{ remote_mysql_app_dir }}"
+      - "{{ remote_nginx_app_dir }}"
+
+  - name: Copy Containerfiles to remote host
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
       owner: webmaster
       group: webmaster
-      mode: "0755"
+      mode: "0644"
+    loop:
+      - { src: "{{ flask_ctx }}/Containerfile", dest: "{{ remote_flask_app_dir }}/Containerfile" }
+      - { src: "{{ flask_ctx }}/requirements.txt", dest: "{{ remote_flask_app_dir }}/requirements.txt" }
+      - { src: "{{ flask_ctx }}/flask_project/gunicorn.conf.py", dest: "{{ remote_flask_app_dir }}/gunicorn.conf.py" }
+      - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
+      - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
 
   - name: Create podman network
     containers.podman.podman_network:
@@ -45,7 +68,7 @@
     containers.podman.podman_image:
         name: mysql-image:1.0
         state: build
-        path: "{{ mysql_ctx }}"
+        path: "{{ remote_mysql_app_dir }}"
     
 
   - name: Run mySQL container
@@ -55,10 +78,10 @@
         ports:
           - "3306:3306"
         env:
-          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
-          MYSQL_DATABASE: "{{ mysql_database }}"
-          MYSQL_USER: "{{ mysql_user }}"
-          MYSQL_PASSWORD: "{{ mysql_password }}"
+          MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
+          MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
+          MYSQL_USER: "{{ MYSQL_USER }}"
+          MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
         volumes:
           - "{{ mysql_volume }}:/var/lib/mysql"
         state: started
@@ -90,7 +113,7 @@
     containers.podman.podman_image:
         name: flask-app-image:1.0
         state: build
-        path: "{{ flask_ctx }}"
+        path: "{{ remote_flask_app_dir }}"
         force: true
         build:
           cache: false
@@ -101,9 +124,9 @@
         image: flask-app-image:1.0
         name: flask-app-container
         env:
-          MYSQL_DATABASE: "{{ mysql_database }}"
-          MYSQL_USER: "{{ mysql_user }}"
-          MYSQL_PASSWORD: "{{ mysql_password }}"
+          MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
+          MYSQL_USER: "{{ MYSQL_USER }}"
+          MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
           DB_HOST: "mysql-container"
           DB_PORT: "3306"
         state: started
@@ -115,7 +138,7 @@
     containers.podman.podman_image:
         name: nginx-app-image:1.0
         state: build
-        path: "{{ nginx_ctx }}"
+        path: "{{ remote_nginx_app_dir}}"
         force: true
         build:
           cache: false
