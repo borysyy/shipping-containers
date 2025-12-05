@@ -60,6 +60,8 @@
       - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
       - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
 
+
+
   - name: Create podman network
     containers.podman.podman_network:
         name: "{{ podman_network }}"
@@ -72,7 +74,7 @@
         path: "{{ remote_mysql_app_dir }}"
     
 
-  - name: Run mySQL container
+  - name: Create mySQL container
     containers.podman.podman_container:
         image: mysql-image:1.0
         name: mysql-container
@@ -85,11 +87,25 @@
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
         volumes:
           - "{{ mysql_volume }}:/var/lib/mysql"
-        state: started
         network:
           - "{{ podman_network }}"
         detach: true
-        restart_policy: always
+        rm: true
+        state: created
+    
+  - name: Generate systemd unit file for MySQL container
+    containers.podman.podman_generate_systemd:
+      name: mysql-container
+      new: true
+      no_headers: true
+      dest: /home/webmaster/.config/systemd/user/
+
+  - name: Ensure mySQL container is started and enabled
+    ansible.builtin.systemd:
+      name: mysql-shipping-containers
+      daemon-register: true
+      enabled: true
+      state: started
 
 
   - name: Wait for MySQL port to be available
@@ -118,8 +134,9 @@
         force: true
         build:
           cache: false
-    
 
+  
+    
   - name: Run Flask container
     containers.podman.podman_container:
         image: flask-app-image:1.0
