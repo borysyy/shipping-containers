@@ -32,7 +32,6 @@
     ansible.builtin.package:
       name:
         - podman
-        - podman-quadlet
         - buildah
       state: present
 
