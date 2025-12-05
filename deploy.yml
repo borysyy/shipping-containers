@@ -99,12 +99,17 @@
         state: quadlet
 
   - name: Reload user systemd
-    command: systemctl --user daemon-reload
+    ansible.builtin.systemd_service:
+      deamon_reload: yes
+      score: user
     become: true
     become_user: webmaster
 
   - name: Enable mysql container
-    command: systemctl --user enable --now container-mysql-shipping_containers.service
+    ansible.builtin.systemd_service:
+      name: container-mysql-shipping_containers.service
+      state: started
+      scope: user
     become: true
     become_user: webmaster
 
