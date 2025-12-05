@@ -103,7 +103,7 @@
   - name: Ensure mySQL container is started and enabled
     ansible.builtin.systemd:
       name: mysql-shipping-containers
-      daemon-register: true
+      daemon_reload: true
       enabled: true
       state: started
 
