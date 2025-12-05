@@ -100,7 +100,7 @@
 
   - name: Reload user systemd
     ansible.builtin.systemd_service:
-      deamon_reload: yes
+      daemon_reload: yes
       score: user
     become: true
     become_user: webmaster
