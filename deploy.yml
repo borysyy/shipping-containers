@@ -72,6 +72,7 @@
     containers.podman.podman_network:
         name: "{{ podman_network }}"
         state: present
+    become: false
 
   - name: Build mySQL image
     containers.podman.podman_image:
