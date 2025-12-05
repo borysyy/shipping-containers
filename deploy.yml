@@ -108,7 +108,7 @@
    
   - name: Enable mysql container
     ansible.builtin.systemd_service:
-      name: container-mysql-shipping_containers.service
+      name: mysql=shipping_containers.service
       state: started
       enabled: true
       scope: user
@@ -174,84 +174,10 @@
         restart_policy: always
         pod: webserver-pod
 
-
-
   - name: Prune dangling images
     containers.podman.podman_prune:
       image: true
    
-
- 
-  # - name: Pause briefly for containers to settle
-  #   pause:
-  #     seconds: 3
-
-  # - name: Generate systemd unit for MySQL container
-  #   command: podman generate systemd --new --name {{ mysql_ct }} --files --restart-policy=on-failure
-  #   args:
-  #     chdir: /tmp
-  #   register: mysql_gen
-  #   changed_when: "'Created' in mysql_gen.stdout or mysql_gen.rc == 0"
-
-  # - name: Move mysql systemd unit into system folder
-  #   shell: |
-  #     mv /tmp/container-{{ mysql_ct }}.service {{ systemd_unit_dir }}/container-{{ mysql_ct }}.service
-  #   args:
-  #     warn: false
-  #   when: "'/tmp/container-{{ mysql_ct }}.service' in lookup('fileglob','/tmp/*', errors='ignore') or (mysql_gen is defined and mysql_gen.stdout is search('container-'))"
-  #   ignore_errors: yes
-
-  # - name: Generate systemd unit for Flask container
-  #   command: podman generate systemd --new --name {{ flask_ct }} --files --restart-policy=on-failure
-  #   args:
-  #     chdir: /tmp
-  #   register: flask_gen
-  #   changed_when: "'Created' in flask_gen.stdout or flask_gen.rc == 0"
-
-  # - name: Move flask systemd unit into system folder
-  #   shell: |
-  #     mv /tmp/container-{{ flask_ct }}.service {{ systemd_unit_dir }}/container-{{ flask_ct }}.service
-  #   args:
-  #     warn: false
-  #   ignore_errors: yes
-
-  # - name: Generate systemd unit for Nginx container
-  #   command: podman generate systemd --new --name {{ nginx_ct }} --files --restart-policy=on-failure
-  #   args:
-  #     chdir: /tmp
-  #   register: nginx_gen
-  #   changed_when: "'Created' in nginx_gen.stdout or nginx_gen.rc == 0"
-
-  # - name: Move nginx systemd unit into system folder
-  #   shell: |
-  #     mv /tmp/container-{{ nginx_ct }}.service {{ systemd_unit_dir }}/container-{{ nginx_ct }}.service
-  #   args:
-  #     warn: false
-  #   ignore_errors: yes
-
-  # - name: Reload systemd daemon
-  #   command: systemctl daemon-reload
-  #   ignore_errors: false
-
-  # - name: Enable and start mysql container service
-  #   systemd:
-  #     name: "container-{{ mysql_ct }}.service"
-  #     enabled: true
-  #     state: started
-  #   ignore_errors: false
-
-  # - name: Enable and start flask container service
-  #   systemd:
-  #     name: "container-{{ flask_ct }}.service"
-  #     enabled: true
-  #     state: started
-
-  # - name: Enable and start nginx container service
-  #   systemd:
-  #     name: "container-{{ nginx_ct }}.service"
-  #     enabled: true
-  #     state: started
-
   - name: Show running podman containers
     command: podman ps --format json
     register: podman_ps
