@@ -69,7 +69,6 @@
     become_user: webmaster
 
 
-
   - name: Create podman network
     containers.podman.podman_network:
         name: "{{ podman_network }}"
@@ -108,12 +107,21 @@
       no_header: true
       dest: /home/webmaster/.config/systemd/user/
 
+  - name: Reload user systemd
+    command: systemctl --user daemon-reload
+    become: true
+    become_user: webmaster
+
+
   - name: Ensure mySQL container is started and enabled
     ansible.builtin.systemd:
       name: container-mysql-shipping-containers
+      scope: user
       daemon_reload: true
       enabled: true
       state: started
+    become: true
+    become_user: webmaster
 
   - name: Wait for MySQL port to be available
     wait_for:
@@ -175,10 +183,6 @@
         restart_policy: always
         pod: webserver-pod
 
-  - name: Reload user systemd
-    command: systemctl --user daemon-reload
-    become: true
-    become_user: webmaster
 
 
   - name: Prune dangling images
