@@ -111,7 +111,7 @@
 
   - name: Create and start webserver pod
     containers.podman.podman_pod:
-        name: webserver-pod
+        name: webserver
         state: quadlet
         hostname: webserver-pod
         quadlet_dir: "{{ quadlet_dir }}"
@@ -146,7 +146,7 @@
         quadlet_dir: "{{ quadlet_dir }}"
         detach: true
         restart_policy: always
-        pod: webserver-pod.pod
+        pod: webserver.pod
     become: false
 
   - name: Build Nginx image
@@ -167,7 +167,7 @@
         quadlet_dir: "{{ quadlet_dir }}"
         detach: true
         restart_policy: always
-        pod: webserver-pod.pod
+        pod: webserver.pod
     become: false
 
   - name: Reload user systemd
@@ -190,7 +190,7 @@
 
   - name: Start webserver pod
     ansible.builtin.systemd_service:
-      name: webserver-pod.service
+      name: pod-webserver.service
       state: started
       enabled: true
       scope: user
