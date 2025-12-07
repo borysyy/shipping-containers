@@ -138,10 +138,10 @@
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
           DB_HOST: "mysql-container"
           DB_PORT: "3306"
-        state: present
+        state: quadlet
         detach: true
         restart_policy: always
-        pod: webserver-pod
+        pod: webserver-pod.pod
     become: false
 
   - name: Build Nginx image
@@ -158,10 +158,10 @@
     containers.podman.podman_container:
         image: nginx-app-image:1.0
         name: nginx-app-shipping_containers
-        state: present
+        state: quadlet
         detach: true
         restart_policy: always
-        pod: webserver-pod
+        pod: webserver-pod.pod
     become: false
 
   - name: Reload user systemd
