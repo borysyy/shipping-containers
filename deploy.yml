@@ -188,15 +188,15 @@
     environment:
       XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
-  - name: Start webserver pod
-    ansible.builtin.systemd_service:
-      name: webserver.service
-      state: started
-      enabled: true
-      scope: user
-    become: false
-    environment:
-      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
+  # - name: Start webserver pod
+  #   ansible.builtin.systemd_service:
+  #     name: webserver.service
+  #     state: started
+  #     enabled: true
+  #     scope: user
+  #   become: false
+  #   environment:
+  #     XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
   - name: Prune dangling images
     containers.podman.podman_prune:
