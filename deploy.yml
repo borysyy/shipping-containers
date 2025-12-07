@@ -136,7 +136,6 @@
           DB_PORT: "3306"
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
-        restart_policy: always
         pod: webserver.pod
     become: false
 
@@ -156,7 +155,6 @@
         name: nginx-app-shipping_containers
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
-        restart_policy: always
         pod: webserver.pod
     become: false
 
