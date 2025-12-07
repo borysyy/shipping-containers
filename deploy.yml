@@ -110,7 +110,7 @@
         hostname: webserver-pod
         quadlet_dir: "{{ quadlet_dir }}"
         ports:
-          - "80:80"
+          - "8080:80"
         network: 
           - "{{ podman_network }}"
     become: false
