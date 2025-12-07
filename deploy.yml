@@ -100,15 +100,9 @@
           - "{{ podman_network }}"
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
+        pod: webserver.pod
     become: false
   
-  - name: Wait for MySQL port to be available
-    wait_for:
-      host: "127.0.0.1"
-      port: 3306
-      delay: 5
-      timeout: 60
-
   - name: Create and start webserver pod
     containers.podman.podman_pod:
         name: webserver
@@ -117,7 +111,6 @@
         quadlet_dir: "{{ quadlet_dir }}"
         ports:
           - "80:80"
-          - "5000:5000"
         network: 
           - "{{ podman_network }}"
     become: false
@@ -140,7 +133,7 @@
           MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
           MYSQL_USER: "{{ MYSQL_USER }}"
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
-          DB_HOST: "mysql-container"
+          DB_HOST: "localhost"
           DB_PORT: "3306"
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
@@ -178,15 +171,15 @@
     environment:
       XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
-  - name: Enable mysql container
-    ansible.builtin.systemd_service:
-      name: mysql-shipping_containers.service
-      state: started
-      enabled: true
-      scope: user
-    become: false
-    environment:
-      XDG_RUNTIME_DIR: "{{ runtime_dir }}"
+  # - name: Enable mysql container
+  #   ansible.builtin.systemd_service:
+  #     name: mysql-shipping_containers.service
+  #     state: started
+  #     enabled: true
+  #     scope: user
+  #   become: false
+  #   environment:
+  #     XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
   - name: Start webserver pod
     ansible.builtin.systemd_service:
