@@ -184,7 +184,7 @@
 
   - name: Start webserver pod
     ansible.builtin.systemd_service:
-      name: webserver-pod.service
+      name: webserver-pod.pod
       state: started
       enabled: true
       scope: user
