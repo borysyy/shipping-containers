@@ -70,10 +70,23 @@
       group: webmaster
     become: false
 
-  - name: Create podman network
-    containers.podman.podman_network:
-        name: "{{ podman_network }}"
-        state: present
+  # - name: Create podman network
+  #   containers.podman.podman_network:
+  #       name: "{{ podman_network }}"
+  #       state: present
+  #   become: false
+
+  
+  - name: Create and start webserver pod
+    containers.podman.podman_pod:
+        name: webserver
+        state: quadlet
+        hostname: webserver-pod
+        quadlet_dir: "{{ quadlet_dir }}"
+        ports:
+          - "8080:80"
+        # network: 
+        #   - "{{ podman_network }}"
     become: false
 
   - name: Build mySQL image
@@ -96,23 +109,11 @@
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
         volumes:
           - "{{ mysql_volume }}:/var/lib/mysql"
-        network:
-          - "{{ podman_network }}"
+        # network:
+        #   - "{{ podman_network }}"
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
-    become: false
-  
-  - name: Create and start webserver pod
-    containers.podman.podman_pod:
-        name: webserver
-        state: quadlet
-        hostname: webserver-pod
-        quadlet_dir: "{{ quadlet_dir }}"
-        ports:
-          - "8080:80"
-        network: 
-          - "{{ podman_network }}"
     become: false
 
   - name: Build Flask image
