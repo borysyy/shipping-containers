@@ -100,8 +100,6 @@
     containers.podman.podman_container:
         image: mysql-image:1.0
         name: mysql-shipping_containers
-        ports:
-          - "3306:3306"
         env:
           MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
           MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
