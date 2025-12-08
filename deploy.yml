@@ -82,7 +82,7 @@
         hostname: webserver-pod
         quadlet_dir: "{{ quadlet_dir }}"
         ports:
-          - "8080:80"
+          - "8443:443"
 
   - name: Build mySQL image
     containers.podman.podman_image:
