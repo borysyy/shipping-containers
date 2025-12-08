@@ -132,7 +132,7 @@
     containers.podman.podman_image:
         name: nginx-app-image:1.0
         state: build
-        path: "{{ remote_nginx_app_dir}}/configs"
+        path: "{{ remote_nginx_app_dir}}"
         force: true
         build:
           cache: false
