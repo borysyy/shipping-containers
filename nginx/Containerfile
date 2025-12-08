@@ -1,0 +1,11 @@
+FROM docker.io/library/nginx:stable
+
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY ./certs/project2.crt /etc/nginx/certs/project2.crt
+COPY ./certs/project2.key /etc/nginx/certs/project2.key
+
+RUN chwown -R nginx:nginx /etc/nginx/certs && \
+    chmod 600 /etc/nginx/certs/project2.key
+
+CMD ["nginx", "-g", "daemon off;"]

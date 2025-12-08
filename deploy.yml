@@ -144,9 +144,7 @@
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
-        volumes:
-          - "{{ remote_nginx_app_dir }}/certs:/etc/nginx/certs:ro"
-
+      
   - name: Reload user systemd
     ansible.builtin.systemd_service:
       daemon_reload: true
