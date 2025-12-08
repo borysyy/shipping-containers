@@ -43,14 +43,6 @@
       - "{{ remote_mysql_app_dir }}"
       - "{{ remote_nginx_app_dir }}"
 
-  - name: Ensure cert directory exists
-    file:
-      path: "{{ remote_nginx_app_dir }}/certs"
-      state: directory
-      owner: webmaster
-      group: webmaster
-      mode: "0755"
-
   - name: Copy application files to remote host
     copy:
       src: "{{ item.src }}"
@@ -63,8 +55,7 @@
       - { src: "{{ flask_ctx }}/requirements.txt", dest: "{{ remote_flask_app_dir }}/requirements.txt" }
       - { src: "{{ flask_ctx }}/flask_project/", dest: "{{ remote_flask_app_dir }}/flask_project/" }
       - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
-      - { src: "{{ nginx_ctx }}/configs", dest: "{{ remote_nginx_app_dir }}/configs" }
-      - { src: "{{ nginx_ctx }}/certs/project2.crt", dest: "{{ remote_nginx_app_dir }}/certs/project2.crt" }
+      - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
   
   - name: Copy nginx key to remote host
     copy:
@@ -73,7 +64,8 @@
       owner: root
       group: root
       mode: "0600"
-   
+    become: true
+
   - name: Ensure user systemd dir exists
     file:
       path: "{{ quadlet_dir }}"
