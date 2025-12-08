@@ -4,16 +4,13 @@
 - name: Deploy web stack with Podman (Nginx -> Flask -> MySQL)
   hosts: webserver
   gather_facts: true
-  become: true
+  become: false
 
   vars_files:
-    - "db-vault"
+    - "vault"
   vars:
 
-    remote_user: "webmaster"
-
     runtime_dir: "/run/user/{{ ansible_user_uid }}"
-
     quadlet_dir: "/home/webmaster/.config/containers/systemd"
 
     src_base_dir: "/home/borysyy/shipping-containers"
@@ -25,9 +22,7 @@
     remote_mysql_app_dir: "/home/webmaster/shipping-containers/mysql"
     remote_nginx_app_dir: "/home/webmaster/shipping-containers/nginx"
 
-
-    # Podman network & volumes
-    podman_network: "shipping_containers_network"
+    # Podman MySQL volume
     mysql_volume: "shipping_containers_data"
 
   tasks:
@@ -37,6 +32,7 @@
         - podman
         - buildah
       state: present
+    become: true
 
   - name: Ensure all build contexts exist
     file:
@@ -47,7 +43,7 @@
       - "{{ remote_mysql_app_dir }}"
       - "{{ remote_nginx_app_dir }}"
 
-  - name: Copy Containerfiles to remote host
+  - name: Copy application files to remote host
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
@@ -59,8 +55,17 @@
       - { src: "{{ flask_ctx }}/requirements.txt", dest: "{{ remote_flask_app_dir }}/requirements.txt" }
       - { src: "{{ flask_ctx }}/flask_project/", dest: "{{ remote_flask_app_dir }}/flask_project/" }
       - { src: "{{ mysql_ctx }}/", dest: "{{ remote_mysql_app_dir }}/" }
-      - { src: "{{ nginx_ctx }}/", dest: "{{ remote_nginx_app_dir }}/" }
-
+      - { src: "{{ nginx_ctx }}/configs", dest: "{{ remote_nginx_app_dir }}/configs" }
+      - { src: "{{ nginx_ctx }}/certs/project2.crt", dest: "{{ remote_nginx_app_dir }}/certs/project2.crt" }
+  
+  - name: Copy nginx key to remote host
+    copy:
+      content: "{{ NGINX_SERVER_KEY}}"   
+      dest: "{{ remote_nginx_app_dir }}/certs/project2.key"
+      owner: root
+      group: root
+      mode: "0600"
+   
   - name: Ensure user systemd dir exists
     file:
       path: "{{ quadlet_dir }}"
@@ -68,16 +73,9 @@
       mode: "0755"
       owner: webmaster
       group: webmaster
-    become: false
 
-  # - name: Create podman network
-  #   containers.podman.podman_network:
-  #       name: "{{ podman_network }}"
-  #       state: present
-  #   become: false
 
-  
-  - name: Create and start webserver pod
+  - name: Create webserver pod
     containers.podman.podman_pod:
         name: webserver
         state: quadlet
@@ -85,16 +83,12 @@
         quadlet_dir: "{{ quadlet_dir }}"
         ports:
           - "8080:80"
-        # network: 
-        #   - "{{ podman_network }}"
-    become: false
 
   - name: Build mySQL image
     containers.podman.podman_image:
         name: mysql-image:1.0
         state: build
         path: "{{ remote_mysql_app_dir }}"
-    become: false
     
   - name: Create mySQL container
     containers.podman.podman_container:
@@ -107,12 +101,9 @@
           MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
         volumes:
           - "{{ mysql_volume }}:/var/lib/mysql"
-        # network:
-        #   - "{{ podman_network }}"
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
-    become: false
 
   - name: Build Flask image
     containers.podman.podman_image:
@@ -122,7 +113,6 @@
         force: true
         build:
           cache: false
-    become: false
   
   - name: Create Flask container
     containers.podman.podman_container:
@@ -137,17 +127,15 @@
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
-    become: false
 
   - name: Build Nginx image
     containers.podman.podman_image:
         name: nginx-app-image:1.0
         state: build
-        path: "{{ remote_nginx_app_dir}}"
+        path: "{{ remote_nginx_app_dir}}/configs"
         force: true
         build:
           cache: false
-    become: false
    
   - name: Create Nginx container
     containers.podman.podman_container:
@@ -156,25 +144,15 @@
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
-    become: false
+        volumes:
+          - "{{ remote_nginx_app_dir }}/certs:/etc/nginx/certs:ro"
 
   - name: Reload user systemd
     ansible.builtin.systemd_service:
       daemon_reload: true
       scope: user
-    become: false
     environment:
       XDG_RUNTIME_DIR: "{{ runtime_dir }}"
-
-  # - name: Enable mysql container
-  #   ansible.builtin.systemd_service:
-  #     name: mysql-shipping_containers.service
-  #     state: started
-  #     enabled: true
-  #     scope: user
-  #   become: false
-  #   environment:
-  #     XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
   - name: Start webserver pod
     ansible.builtin.systemd_service:
@@ -182,12 +160,10 @@
       state: started
       enabled: true
       scope: user
-    become: false
     environment:
       XDG_RUNTIME_DIR: "{{ runtime_dir }}"
 
   - name: Prune dangling images
     containers.podman.podman_prune:
       image: true
-    become: false
    
