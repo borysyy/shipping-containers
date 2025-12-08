@@ -73,7 +73,6 @@
       owner: root
       group: root
       mode: "0600"
-    become: true
    
   - name: Ensure user systemd dir exists
     file:
