@@ -43,6 +43,15 @@
       - "{{ remote_mysql_app_dir }}"
       - "{{ remote_nginx_app_dir }}"
 
+  - name: Ensure cert directory exists
+    file:
+      path: "{{ remote_nginx_app_dir }}/certs"
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+
+
   - name: Copy application files to remote host
     copy:
       src: "{{ item.src }}"
