@@ -60,7 +60,7 @@
   
   - name: Copy nginx key to remote host
     copy:
-      content: "{{ NGINX_SERVER_KEY}}"   
+      src: "{{ nginx_ctx }}/certs/project2.key"   
       dest: "{{ remote_nginx_app_dir }}/certs/project2.key"
       owner: root
       group: root
