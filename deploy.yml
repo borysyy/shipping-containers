@@ -47,10 +47,9 @@
     file:
       path: "{{ remote_nginx_app_dir }}/certs"
       state: directory
-      owner: root
-      group: root
+      owner: webmaster
+      group: webmaster
       mode: "0755"
-
 
   - name: Copy application files to remote host
     copy:
