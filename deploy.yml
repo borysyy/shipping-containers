@@ -61,8 +61,8 @@
     copy:
       src: "{{ nginx_ctx }}/certs/project2.key"   
       dest: "{{ remote_nginx_app_dir }}/certs/project2.key"
-      owner: root
-      group: root
+      owner: webmaster
+      group: webmaster
       mode: "0600"
     become: true
 
@@ -132,7 +132,7 @@
     containers.podman.podman_image:
         name: nginx-app-image:1.0
         state: build
-        path: "{{ remote_nginx_app_dir}}"
+        path: "{{ remote_nginx_app_dir}}/configs"
         force: true
         build:
           cache: false
@@ -144,6 +144,9 @@
         state: quadlet
         quadlet_dir: "{{ quadlet_dir }}"
         pod: webserver.pod
+        volumes:
+          - "{{ remote_nginx_app_dir }}/certs:/etc/nginx/certs:ro"
+
       
   - name: Reload user systemd
     ansible.builtin.systemd_service:
